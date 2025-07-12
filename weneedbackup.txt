@@ -1,0 +1,60 @@
+import os
+import streamlit as st
+from openai import OpenAI
+from dotenv import load_dotenv
+
+# Load the OpenAI API key (and any other secrets) from a custom env file
+load_dotenv("key.env")  # expects an OPENAI_API_KEY entry inside openai.env
+
+# Instantiate a client; the SDK reads OPENAI_API_KEY from env vars automatically
+client = OpenAI()
+
+# --- Streamlit page setup ---------------------------------------------------
+st.set_page_config(page_title="Lawgic Chatbot", page_icon="⚖️")
+
+# --- Conversation state -----------------------------------------------------
+if "messages" not in st.session_state:
+    # Start with a system message to define assistant behaviour
+    st.session_state["messages"] = [
+        {"role": "system", "content": "You are a helpful assistant."}
+    ]
+
+# --- Render chat history ----------------------------------------------------
+for message in st.session_state["messages"][1:]:  # skip the system prompt
+    st.chat_message(message["role"]).markdown(message["content"])
+
+# --- User input -------------------------------------------------------------
+prompt = st.chat_input("Ask me anything…")
+if prompt:
+    # Store user message
+    st.session_state["messages"].append({"role": "user", "content": prompt})
+    st.chat_message("user").markdown(prompt)
+
+    # Create a placeholder for the assistant's response
+    with st.chat_message("assistant"):
+        placeholder = st.empty()
+        placeholder.markdown("Thinking…")
+
+        assistant_reply = ""
+
+        # --- Call OpenAI with streaming -------------------------------------
+        response = client.chat.completions.create(
+            model="o4-mini",               # or "gpt-4o-mini", "gpt-3.5-turbo", etc.
+            messages=st.session_state["messages"],
+            stream=True
+        )
+
+        # Stream the assistant's reply token‑by‑token
+        for chunk in response:
+            delta = chunk.choices[0].delta.content or ""
+            assistant_reply += delta
+            placeholder.markdown(assistant_reply + "▌")  # live typing cursor
+
+        # Replace the placeholder with the final response (remove cursor)
+        placeholder.markdown(assistant_reply)
+
+    # Save assistant message to history
+    st.session_state["messages"].append({
+        "role": "assistant",
+        "content": assistant_reply
+    })
