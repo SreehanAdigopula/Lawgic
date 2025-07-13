@@ -141,21 +141,7 @@ div.stButton > button:hover {
 ''',
     unsafe_allow_html=True,
 )
-st.markdown("""
-<style>
-/* Dark Chat Input Box */
-.stChatInput {
-    background: rgba(40, 40, 40, 1) !important;
-    border-radius: 24px !important;
-    padding: 12px 16px !important;
-    box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
-}
 
-
-
-
-</style>
-""", unsafe_allow_html=True)
 
 # ──────────────────────── PDF Summariser Widget ────────────────────────
 def pdf_summariser_widget(label: str = "📄 Upload a legal document (PDF) to summarise"):
