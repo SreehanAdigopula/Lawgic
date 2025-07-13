@@ -5,7 +5,7 @@
 #   • Plain-language PDF summarisation
 #   • A polished, responsive user interface
 
-# ───────────────────────────────── Imports ──────────────────────────────
+# ───────────────────────────────── Imported Libraries ──────────────────────────────
 import tempfile
 import fitz                     # PyMuPDF – lightweight PDF parsing
 import streamlit as st
@@ -13,32 +13,25 @@ from openai import OpenAI
 from dotenv import load_dotenv  # noqa: F401 (env vars loaded elsewhere)
 
 # ────────────────────────────── OpenAI Client ───────────────────────────
-# API key is stored securely in `.streamlit/secrets.toml`
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # ──────────────── Utility: version-safe Streamlit rerun ────────────────
 def safe_rerun() -> None:
-    """
-    Programmatically rerun the app across Streamlit versions.
-    """
     if hasattr(st, "experimental_rerun"):
         st.experimental_rerun()
     elif hasattr(st, "rerun"):
         st.rerun()
     else:
-        # Fallback for very old versions
         st.session_state._needs_rerun = True  # type: ignore[attr-defined]
 
 # ────────────────────────── Session-State Defaults ─────────────────────
 if "sidebar_state" not in st.session_state:
-    # Initial sidebar visibility (matches `initial_sidebar_state`)
     st.session_state.sidebar_state = "expanded"
 
 if "current_page" not in st.session_state:
     st.session_state.current_page = "homepage"
 
 if "messages" not in st.session_state:
-    # System prompt establishes the assistant’s capabilities
     st.session_state.messages = [
         {
             "role": "system",
@@ -52,12 +45,10 @@ if "messages" not in st.session_state:
 
 # ───────────────────────────── UI Callbacks ────────────────────────────
 def toggle_sidebar() -> None:
-    """Expand / collapse the sidebar and trigger rerun."""
     st.session_state.sidebar_state = (
         "collapsed" if st.session_state.sidebar_state == "expanded" else "expanded"
     )
 
-# Sidebar toggle button (always visible)
 st.button(
     "🔽 Hide Sidebar" if st.session_state.sidebar_state == "expanded" else "▶️ Show Sidebar",
     on_click=toggle_sidebar,
@@ -72,7 +63,6 @@ st.set_page_config(
 )
 
 # ────────────────────────── Global Stylesheet ──────────────────────────
-# Inject custom CSS to give the app its distinctive look & feel.
 st.markdown(
     '''
 <style>
@@ -137,7 +127,12 @@ html, body {font-family: 'Inter', sans-serif !important;}
 /* Buttons & sliders */
 .stButton button, .stSlider > div[data-baseweb="slider"] span {
     background: var(--accent) !important;
-    color: #000 !important;
+}
+div.stButton > button {
+    color: black !important;
+}
+div.stButton > button:hover {
+    color: black !important;
 }
 .stButton button:hover {box-shadow: 0 0 8px var(--accent);} 
 
@@ -146,55 +141,38 @@ html, body {font-family: 'Inter', sans-serif !important;}
 ''',
     unsafe_allow_html=True,
 )
-
 st.markdown("""
 <style>
-/* Gray Chat Input Box */
-.stChatInput input {
-    background: rgba(0, 0, 0, 0.77) !important;
-    color: #fff !important;
-    border: 1px solid #aaa !important;
+/* Dark Chat Input Box */
+.stChatInput {
+    background: rgba(40, 40, 40, 1) !important;
+    border-radius: 24px !important;
+    padding: 12px 16px !important;
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
 }
 
-/* Gray Sidebar Background */
+/* Black Sidebar Background */
 section[data-testid="stSidebar"] {
-    background: rgba(0, 0, 0, 0.77) !important;
+    background: #000 !important;
     color: white !important;
 }
 
-/* Sidebar Text & Label Styling */
-section[data-testid="stSidebar"] * {
-    color: white !important;
-    font-weight: 500;
-}
 
-/* Sidebar Headers */
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3 {
-    color: white !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
-
 # ──────────────────────── PDF Summariser Widget ────────────────────────
 def pdf_summariser_widget(label: str = "📄 Upload a legal document (PDF) to summarise"):
-    """
-    Allow the user to upload a PDF and receive a plain-language summary.
-    """
     with st.expander(label):
         uploaded = st.file_uploader("Choose a PDF", type=["pdf"], key=label)
         if not uploaded:
             return
 
-        # Save PDF to a temp file for processing
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(uploaded.read())
             pdf_path = tmp.name
 
         try:
-            # Extract text (15k chars max for this demo)
             with fitz.open(pdf_path) as doc:
                 text = "\n".join(page.get_text() for page in doc)
 
@@ -212,7 +190,8 @@ def pdf_summariser_widget(label: str = "📄 Upload a legal document (PDF) to su
                                 "Summarise legal documents in plain-language bullet points."
                             ),
                         },
-                        {"role": "user", "content": f"Summarise this document:\n\n{snippet}"},
+                        {"role": "user",
+                            "content": f"Summarise this document:\n\n{snippet}"},
                     ],
                 )
 
@@ -224,7 +203,6 @@ def pdf_summariser_widget(label: str = "📄 Upload a legal document (PDF) to su
 
 # ───────────────────────────── Page Layouts ────────────────────────────
 def show_homepage() -> None:
-    """Render the landing page with product pitch and PDF widget."""
     st.markdown(
         """
 <div style='text-align:center; padding:4rem 0 2rem;'>
@@ -254,29 +232,25 @@ def show_homepage() -> None:
         safe_rerun()
 
 def show_chat() -> None:
-    """Render the chat interface and real-time conversation."""
-    # Optional PDF summarisation on the chat page
-    st.markdown("### 📄 Upload PDF to Summarise (Chat Page)")
-    pdf_summariser_widget("📄 Upload PDF inside Chat page")
-
-    # Chat banner
     st.markdown(
         '<div class="chat-banner">👨‍⚖️ Lawgic Chat • Ask anything about U.S. law</div>',
         unsafe_allow_html=True,
     )
+    st.markdown("### 📄 Upload PDF to Summarise (Chat Page)")
+    pdf_summariser_widget("📄 Upload PDF inside Chat page")
 
-    # Chat history container
+   
+
     st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
-    # Replay previous assistant / user messages (skip system prompt)
     for msg in st.session_state.messages[1:]:
         st.chat_message(msg["role"]).write(msg["content"])
 
-    # Chat input
     user_question = st.chat_input("Ask Anything…")
     if user_question:
         st.chat_message("user").write(user_question)
-        st.session_state.messages.append({"role": "user", "content": user_question})
+        st.session_state.messages.append(
+            {"role": "user", "content": user_question})
 
         with st.spinner("Thinking..."):
             try:
@@ -301,8 +275,6 @@ def show_chat() -> None:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ─────────────────────────────── Sidebar ───────────────────────────────
-
-
 with st.sidebar:
     st.header("Navigation")
 
@@ -316,7 +288,6 @@ with st.sidebar:
         st.session_state.current_page = selected.lower()
         safe_rerun()
 
-    # Additional tools only on chat page
     if st.session_state.current_page == "chat":
         st.divider()
         st.header("Utilities & Filters")
@@ -326,11 +297,12 @@ with st.sidebar:
         st.divider()
         st.selectbox(
             "Topic Filter",
-            options=["All", "Housing", "Employment", "Immigration", "Legal Documentation"],
+            options=["All", "Housing", "Employment",
+                     "Immigration", "Legal Documentation"],
         )
 
         if st.button("🔄 Reset Chat"):
-            st.session_state.messages = st.session_state.messages[:1]  # keep system prompt
+            st.session_state.messages = st.session_state.messages[:1]
             safe_rerun()
 
 # ────────────────────────────── Routing ────────────────────────────────
