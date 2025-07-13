@@ -147,6 +147,37 @@ html, body {font-family: 'Inter', sans-serif !important;}
     unsafe_allow_html=True,
 )
 
+st.markdown("""
+<style>
+/* Gray Chat Input Box */
+.stChatInput input {
+    background: rgba(0, 0, 0, 0.77) !important;
+    color: #fff !important;
+    border: 1px solid #aaa !important;
+}
+
+/* Gray Sidebar Background */
+section[data-testid="stSidebar"] {
+    background: rgba(0, 0, 0, 0.77) !important;
+    color: white !important;
+}
+
+/* Sidebar Text & Label Styling */
+section[data-testid="stSidebar"] * {
+    color: white !important;
+    font-weight: 500;
+}
+
+/* Sidebar Headers */
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3 {
+    color: white !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # ──────────────────────── PDF Summariser Widget ────────────────────────
 def pdf_summariser_widget(label: str = "📄 Upload a legal document (PDF) to summarise"):
     """
@@ -270,6 +301,8 @@ def show_chat() -> None:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ─────────────────────────────── Sidebar ───────────────────────────────
+
+
 with st.sidebar:
     st.header("Navigation")
 
