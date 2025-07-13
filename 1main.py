@@ -151,11 +151,7 @@ st.markdown("""
     box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
 }
 
-/* Black Sidebar Background */
-section[data-testid="stSidebar"] {
-    background: #000 !important;
-    color: white !important;
-}
+
 
 
 </style>
