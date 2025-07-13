@@ -1,4 +1,7 @@
 .streamlit/secrets.toml
+.streamlit/
+.devcontainer/
+.github/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
